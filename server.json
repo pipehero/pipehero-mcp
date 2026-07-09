@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.pipehero/pipehero",
-  "description": "Tunnel localhost and debug webhooks from your AI agent — list tunnels, read captured webhooks, and replay them to localhost.",
+  "description": "Debug webhooks from your AI agent: inspect and replay captured webhooks on localhost.",
   "repository": {
     "url": "https://github.com/pipehero/pipehero-mcp",
     "source": "github"
