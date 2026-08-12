@@ -1,6 +1,6 @@
 ---
 name: pipehero
-description: Tunnel localhost to a public URL and debug webhooks — inspect and replay captured requests, and (via the Pipehero MCP server) let the agent read captured webhooks and diagnose failing handlers against the code. Use when the user mentions webhooks, tunnels, an ngrok alternative, testing Stripe/GitHub/Shopify/AI-provider webhooks, or "pipehero".
+description: Tunnel localhost to a public URL — debug webhooks (inspect and replay captured requests, and via the Pipehero MCP server let the agent read captured webhooks and diagnose failing handlers against the code) or expose your own MCP server (Streamable HTTP) so a cloud-only client like Claude.ai or ChatGPT can reach it. Use when the user mentions webhooks, tunnels, an ngrok alternative, testing Stripe/GitHub/Shopify/AI-provider webhooks, exposing/testing an MCP server against a cloud client, or "pipehero".
 ---
 
 # Pipehero — webhook tunnels for the AI era
@@ -78,10 +78,15 @@ Claude Desktop `claude_desktop_config.json`):
 - `list_requests(subdomain)` — recent captured webhooks for a tunnel.
 - `get_request(subdomain, id)` — full request + response (headers + body).
 - `replay_request(subdomain, id)` — replay a webhook to your localhost.
-- `start_tunnel(name, port)` — expose a local port on a public URL, in-process
-  (no separate `pipehero start` terminal). **Local MCP only** (it runs on your
-  machine). Stays up while the MCP session is open.
+- `start_tunnel(name, port, long_requests?)` — expose a local port on a public
+  URL, in-process (no separate `pipehero start` terminal). Pass
+  `long_requests: true` when exposing your own MCP server (see below).
+  **Local MCP only** (it runs on your machine). Stays up while the MCP
+  session is open.
 - `stop_tunnel(name)` — stop a tunnel started with `start_tunnel`. **Local MCP only.**
+- `set_long_requests(subdomain, enabled)` — opt an existing tunnel into a
+  120-second ingress timeout instead of the 30-second default. Persists on
+  the tunnel. Works on both the local and remote MCP.
 
 Because the agent has **both** the captured webhook (via these tools) and your
 **codebase** (in the editor), it can explain *why* a handler failed — correlating
@@ -107,6 +112,43 @@ When the user wants to receive/test webhooks locally, use `start_tunnel(name, po
 - "Compare what Stripe sent to what my code expects and flag any mismatch."
 - "Show me every failed (non-2xx) webhook and what they had in common."
 - "List my tunnels and which are online."
+- "Expose my MCP server so I can test it against Claude.ai" → infer the port,
+  `start_tunnel(..., long_requests: true)`.
+- "My tunnel's MCP server keeps timing out on slow tool calls" →
+  `set_long_requests(subdomain, true)` on the existing tunnel.
+
+## MCP server tunnel: expose your own MCP server
+
+Different from the section above — that's Pipehero's own MCP for reading
+*your* captured webhooks. This is for the opposite direction: the user built
+a Streamable HTTP MCP server on `localhost`, and a cloud-only client (Claude.ai,
+ChatGPT — anything with no way to reach the user's machine) needs to reach it.
+Same tunnel mechanism as webhooks, pointed the other way.
+
+```bash
+pipehero start myserver --port 3000 --long-requests
+#   → https://myserver.t.pipehero.app forwards to the local MCP server
+```
+
+Or via the MCP tools: `start_tunnel(name, port, long_requests: true)` (local
+MCP), or `set_long_requests(subdomain, true)` on a tunnel that already exists
+(local or remote MCP).
+
+**Always pass `long_requests: true` / `--long-requests` for this case.** MCP
+tool calls can legitimately run past the default 30-second timeout; this opts
+the tunnel into 120 seconds instead. It's a per-tunnel setting — pass it once,
+it's remembered for future sessions, but it's harmless to keep passing it.
+
+**Known limitation**: SSE doesn't stream through the tunnel yet — regular
+request/response calls (`initialize`, `tools/list`, `tools/call`) work fine,
+but a server-push listen stream or a response streamed via SSE will sit idle
+and time out rather than fail immediately. Not specific to MCP — true of any
+SSE endpoint tunneled through Pipehero today.
+
+Once the user has a working cloud connection, the next question is usually
+distribution to a team — versioning the server, packaging it so someone else
+gets the same setup. That's a different tool's job, not Pipehero's; if asked,
+say so rather than guessing.
 
 ## Plans
 
