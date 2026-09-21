@@ -193,8 +193,8 @@ WebSocket client.
 Pipehero also stores the project's **API docs** as collections: endpoints with
 descriptions, parameters, request bodies, saved response examples and
 environments (local, staging, prod), shared with the whole team. Through the
-**remote** MCP (`https://mcp.pipehero.app/mcp`; the local `pipehero mcp` doesn't
-have these yet) you can read and maintain them, so the docs stay true without
+MCP, remote (`https://mcp.pipehero.app/mcp`) or local (`pipehero mcp`, version
+0.1.14 and later), you can read and maintain them, so the docs stay true without
 the user doing it by hand.
 
 ### Tools
@@ -218,6 +218,17 @@ the user doing it by hand.
   send it and read the real response; `list_api_runs` shows what was sent and
   returned before.
 - `create_api_collection(name)` — an empty collection.
+- `save_captured_request(collection_id, tunnel, request_id, endpoint_id?)` —
+  turn a real request from `list_requests` into docs: an example on the
+  endpoint that already covers its route, or a new endpoint. Credentials,
+  cookies and signatures are replaced by variables, and only JSON bodies are
+  kept.
+- `check_api_drift(collection_id, tunnel)` — (Pro/Team) compare the docs with
+  the tunnel's real traffic: routes nobody documented, status codes with no
+  example, fields missing from every example, undocumented query parameters.
+  Each finding names the `request_id` that shows it, which you can pass to
+  `save_captured_request`.
+- `list_api_proposals` — see what happened to the changes you proposed (below).
 
 ### How to use them
 
@@ -257,6 +268,14 @@ Rules that matter:
   Free, say so instead of retrying.
 - Free workspaces have limits (1 collection, 25 endpoints); if a call fails on
   a limit, tell the user rather than working around it.
+- **Some workspaces review AI changes** (Team). Then a write tool answers
+  `pending_review` with a `proposal_id` and changes nothing until a teammate
+  approves it. Don't retry it or assume it worked: say that it is waiting for
+  approval, and use `list_api_proposals` later to see whether it was approved,
+  or rejected (with the reviewer's reason, which you should follow).
+- **Your edits are recorded.** Every change shows in the endpoint's history as
+  made by an AI agent, and a teammate can restore an earlier version, so make
+  small, deliberate changes rather than rewriting an endpoint wholesale.
 
 ### Example prompts
 
@@ -269,6 +288,11 @@ Rules that matter:
   the docs." → `run_api_endpoint`, compare with `get_api_endpoint`.
 - "Import ./openapi.json as a new collection called Partner API." →
   `import_api_spec`.
+- "Check the Payments API docs against what myapp really received and fix what
+  drifted." → `check_api_drift`, then `save_captured_request` for the findings
+  that are real, and `upsert_api_endpoint` for parameters it can't add.
+- "Document the last Stripe webhook that hit myapp." → `list_requests`,
+  `save_captured_request`.
 
 ## Plans
 
