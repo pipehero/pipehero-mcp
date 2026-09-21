@@ -63,6 +63,7 @@ Any MCP client works — add it to `.cursor/mcp.json`, `claude_desktop_config.js
 | `run_api_endpoint(collection_id, method + path, environment)` | Send it and read the real response. |
 | `save_captured_request(collection_id, tunnel, request_id)` | Turn a real captured request into docs, without credentials. |
 | `check_api_drift(collection_id, tunnel)` | Compare the docs with real traffic (Pro/Team). |
+| `list_api_monitors(collection_id)` | Which endpoints are monitored and which are failing, with the last error (Pro/Team). |
 | `list_api_proposals` | What happened to your proposed changes, on workspaces that review AI changes. |
 
 Because your agent has both the captured webhook and your codebase, it can explain *why*

@@ -229,6 +229,10 @@ the user doing it by hand.
   Each finding names the `request_id` that shows it, which you can pass to
   `save_captured_request`.
 - `list_api_proposals` — see what happened to the changes you proposed (below).
+- `list_api_monitors(collection_id)` — which endpoints are checked on a
+  schedule (Pro/Team) and how they are doing: state, the last check with its
+  status, latency and error, and since when it has been failing. Read-only:
+  people decide what to monitor.
 
 ### How to use them
 
@@ -293,6 +297,8 @@ Rules that matter:
   that are real, and `upsert_api_endpoint` for parameters it can't add.
 - "Document the last Stripe webhook that hit myapp." → `list_requests`,
   `save_captured_request`.
+- "What is failing in production?" → `list_api_monitors`, then
+  `get_api_endpoint` and the code of whatever is `failing`.
 
 ## Plans
 
