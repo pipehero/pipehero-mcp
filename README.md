@@ -54,6 +54,13 @@ Any MCP client works — add it to `.cursor/mcp.json`, `claude_desktop_config.js
 | `replay_request(subdomain, id)` | Replay a webhook to your localhost. |
 | `start_tunnel(name, port)` | Expose a local port on a public URL (local MCP only). |
 | `stop_tunnel(name)` | Stop a tunnel started with `start_tunnel` (local MCP only). |
+| `list_api_collections`, `get_api_collection(collection_id)` | Your saved API docs: folders, endpoints, environments (remote MCP). |
+| `get_api_endpoint(collection_id, method + path)` | One endpoint in full, with its version and response examples. |
+| `upsert_api_endpoint(collection_id, method, path, …)` | Create or update an endpoint by route, so docs follow your code. |
+| `add_api_example(collection_id, method + path, name, status, …)` | Save a response example. |
+| `delete_api_endpoint(collection_id, method + path)` | Remove an endpoint whose route is gone. |
+| `import_api_spec(format, content)` / `export_api_collection(collection_id)` | OpenAPI, Postman and curl, both ways. |
+| `run_api_endpoint(collection_id, method + path, environment)` | Send it and read the real response. |
 
 Because your agent has both the captured webhook and your codebase, it can explain *why*
 a handler failed — then fix it and replay to confirm.

@@ -1,6 +1,6 @@
 ---
 name: pipehero
-description: Tunnel localhost to a public URL — debug webhooks (inspect and replay captured requests, and via the Pipehero MCP server let the agent read captured webhooks and diagnose failing handlers against the code), expose your own MCP server (Streamable HTTP) so a cloud-only client like Claude.ai or ChatGPT can reach it, or relay your app's own WebSocket traffic so you can test a real iOS/Android/web build against localhost from a physical device. Use when the user mentions webhooks, tunnels, an ngrok alternative, testing Stripe/GitHub/Shopify/AI-provider webhooks, exposing/testing an MCP server against a cloud client, testing a mobile app on a real device, or "pipehero".
+description: Tunnel localhost to a public URL — debug webhooks (inspect and replay captured requests, and via the Pipehero MCP server let the agent read captured webhooks and diagnose failing handlers against the code), expose your own MCP server (Streamable HTTP) so a cloud-only client like Claude.ai or ChatGPT can reach it, or relay your app's own WebSocket traffic so you can test a real iOS/Android/web build against localhost from a physical device, or keep the project's saved API docs (endpoints, response examples, environments) up to date as you change routes. Use when the user mentions webhooks, tunnels, an ngrok alternative, testing Stripe/GitHub/Shopify/AI-provider webhooks, exposing/testing an MCP server against a cloud client, testing a mobile app on a real device, documenting or importing an API (OpenAPI, Postman, curl), an API collection, or "pipehero".
 ---
 
 # Pipehero — webhook tunnels for the AI era
@@ -187,6 +187,88 @@ retrying silently. An idle session (no frames either direction for 5 minutes)
 is closed automatically, and any session caps at 6 hours even if active — the
 app should handle a reconnect gracefully regardless, normal for any
 WebSocket client.
+
+## API collections: keep the docs true as you change routes
+
+Pipehero also stores the project's **API docs** as collections: endpoints with
+descriptions, parameters, request bodies, saved response examples and
+environments (local, staging, prod), shared with the whole team. Through the
+**remote** MCP (`https://mcp.pipehero.app/mcp`; the local `pipehero mcp` doesn't
+have these yet) you can read and maintain them, so the docs stay true without
+the user doing it by hand.
+
+### Tools
+
+- `list_api_collections` / `get_api_collection(collection_id)` — find the
+  collection, its folders, endpoints and environments.
+- `get_api_endpoint(collection_id, method + path)` — one endpoint in full, with
+  its current `version` and saved examples.
+- `upsert_api_endpoint(collection_id, method, path, name?, description?, folder?, params?, headers?, body?, version?)`
+  — create **or update** the endpoint for that route. Only the fields you send
+  change, and repeating it never duplicates.
+- `add_api_example(collection_id, method + path, name, status, body?, headers?)`
+  — save a response example; one with the same name is replaced.
+- `delete_api_endpoint(collection_id, method + path)` — remove a route that no
+  longer exists. Cannot be undone.
+- `import_api_spec(format, content, collection_id?, name?)` — import an OpenAPI
+  3.x document (JSON), a Postman collection or a curl command.
+  `export_api_collection(collection_id, format?)` — read the whole API as
+  OpenAPI or Postman.
+- `run_api_endpoint(collection_id, method + path, environment, variables?)` —
+  send it and read the real response; `list_api_runs` shows what was sent and
+  returned before.
+- `create_api_collection(name)` — an empty collection.
+
+### How to use them
+
+Whenever the user **adds, changes or removes a route**, keep the collection in
+step, without being asked:
+
+1. `list_api_collections` and pick the project's collection. If there is none,
+   `import_api_spec` when the repo has an OpenAPI file (convert YAML to JSON
+   first), otherwise `create_api_collection`.
+2. For each route you touched, `upsert_api_endpoint` with the method and the
+   path **as written in the code** (`/users/:id` and `/users/{id}` are the same
+   route). Describe what it does, document the fields it takes in `params`, and
+   put a realistic example in `body`. Group related routes with `folder`.
+3. For each response the handler can return (success, validation error, auth
+   failure), `add_api_example` with the status and a body that matches the code.
+4. To check your work, `run_api_endpoint` against the `local` environment
+   (start the tunnel first) and compare the response with the examples.
+5. When a route is deleted from the code, `delete_api_endpoint`.
+
+Rules that matter:
+
+- **Send `version`.** Get it from `get_api_endpoint` and pass it to
+  `upsert_api_endpoint`. If it comes back as changed, a teammate edited the
+  endpoint: re-read it and merge, don't overwrite.
+- **Never put a secret in a header, body or example.** Reference it as
+  `{{token}}` and let the user store the value as a **secret** variable in
+  *Manage environments* (encrypted, and never shown again, not even to you:
+  `get_api_collection` reports a secret only as set or not). You can't create
+  secrets from the MCP, and that is deliberate. Imports already replace
+  credentials with variables, and run history stores them as `«redacted»`.
+- **Ask before writing to production.** Running a `POST`/`PUT`/`PATCH`/`DELETE`
+  against a `prod` environment is refused unless you pass
+  `confirm_write_to_prod: true`. Only do that after the user has said yes to
+  that specific request. Reads (`GET`) don't need it.
+- **Cloud runs (staging, prod) are Pro/Team** and only reach public addresses;
+  for `localhost` use the `local` environment through the tunnel. If the org is on
+  Free, say so instead of retrying.
+- Free workspaces have limits (1 collection, 25 endpoints); if a call fails on
+  a limit, tell the user rather than working around it.
+
+### Example prompts
+
+- "I just added a refund route. Document it, including the 409 for an
+  already-refunded charge." → `upsert_api_endpoint` + `add_api_example`.
+- "Compare the Payments API docs with the routes in this repo and fix whatever
+  drifted." → `get_api_collection`, read the code, `upsert_api_endpoint` /
+  `delete_api_endpoint`.
+- "Run Create a charge against my local environment and tell me if it matches
+  the docs." → `run_api_endpoint`, compare with `get_api_endpoint`.
+- "Import ./openapi.json as a new collection called Partner API." →
+  `import_api_spec`.
 
 ## Plans
 
