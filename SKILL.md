@@ -233,6 +233,14 @@ the user doing it by hand.
   schedule (Pro/Team) and how they are doing: state, the last check with its
   status, latency and error, and since when it has been failing. Read-only:
   people decide what to monitor.
+- `get_api_share_link(collection_id, method + path)` — the endpoint's
+  shareable link (a read-only page with its docs, examples and latest run,
+  secrets hidden), if it has one. `get_api_endpoint` also returns it as `share`.
+- `share_api_endpoint(collection_id, method + path, link_access?, invite?)` —
+  create that link and get its URL. With no options it is for the workspace:
+  teammates open it after signing in. Only open it to `anyone with the link`
+  (`link_access: viewer`, or `commenter` on Team) or `invite` people by email
+  when the user asks to share it outside the team. The URL never changes.
 
 ### How to use them
 
@@ -251,6 +259,8 @@ step, without being asked:
 4. To check your work, `run_api_endpoint` against the `local` environment
    (start the tunnel first) and compare the response with the examples.
 5. When a route is deleted from the code, `delete_api_endpoint`.
+6. When the user wants a link to the endpoint (for a PR, an issue or a
+   message), `share_api_endpoint` and paste the `url` it returns.
 
 Rules that matter:
 
@@ -299,6 +309,8 @@ Rules that matter:
   `save_captured_request`.
 - "What is failing in production?" → `list_api_monitors`, then
   `get_api_endpoint` and the code of whatever is `failing`.
+- "Add the Pipehero link of the endpoint to the PR." → `share_api_endpoint`
+  (no options), then put its `url` in the PR description.
 
 ## Plans
 

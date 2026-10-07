@@ -65,6 +65,8 @@ Any MCP client works — add it to `.cursor/mcp.json`, `claude_desktop_config.js
 | `check_api_drift(collection_id, tunnel)` | Compare the docs with real traffic (Pro/Team). |
 | `list_api_monitors(collection_id)` | Which endpoints are monitored and which are failing, with the last error (Pro/Team). |
 | `list_api_proposals` | What happened to your proposed changes, on workspaces that review AI changes. |
+| `get_api_share_link(collection_id, method + path)` | The endpoint's shareable link: a read-only page with its docs, examples and latest run. |
+| `share_api_endpoint(collection_id, method + path, …)` | Create that link (workspace-only by default), open it to anyone with the link, or invite people by email. |
 
 Because your agent has both the captured webhook and your codebase, it can explain *why*
 a handler failed — then fix it and replay to confirm.
