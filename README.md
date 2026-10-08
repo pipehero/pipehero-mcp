@@ -67,6 +67,7 @@ Any MCP client works — add it to `.cursor/mcp.json`, `claude_desktop_config.js
 | `list_api_proposals` | What happened to your proposed changes, on workspaces that review AI changes. |
 | `get_api_share_link(collection_id, method + path)` | The endpoint's shareable link: a read-only page with its docs, examples and latest run. |
 | `share_api_endpoint(collection_id, method + path, …)` | Create that link (workspace-only by default), open it to anyone with the link, or invite people by email. |
+| `share_api_collection(collection_id, …)` | The same for a whole collection: every endpoint, read-only, never its environments. |
 
 Because your agent has both the captured webhook and your codebase, it can explain *why*
 a handler failed — then fix it and replay to confirm.

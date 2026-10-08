@@ -241,6 +241,10 @@ the user doing it by hand.
   teammates open it after signing in. Only open it to `anyone with the link`
   (`link_access: viewer`, or `commenter` on Team) or `invite` people by email
   when the user asks to share it outside the team. The URL never changes.
+- `share_api_collection(collection_id, link_access?, invite?)` — the same for
+  a whole collection: every endpoint in it (including ones added later), with
+  examples and latest runs; never its environments, and it can't be exported.
+  `get_api_collection` returns its link as `share`.
 
 ### How to use them
 
