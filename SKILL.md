@@ -318,7 +318,7 @@ Rules that matter:
 
 ## Plans
 
-Free (1 tunnel, live tail, replay, MCP), Pro ($9/mo — 3 tunnels, longer history,
+Free (1 tunnel, live tail, replay, MCP), Pro ($9/mo — 10 tunnels, longer history,
 signature verification, alerts, Realtime WebSocket tunnel), Team ($15/mo —
 shared workspace, members, seats). Plans are per workspace. See
 https://pipehero.app/#pricing.
